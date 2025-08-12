@@ -2,7 +2,7 @@ import aiohttp
 import asyncio
 import pandas as pd
 
-domains = open('domain1.txt').read().splitlines()
+domains = open('domains.txt').read().splitlines()
 
 async def check_domain(session, domain):
     results = []
@@ -11,23 +11,17 @@ async def check_domain(session, domain):
         protocol = domain.split('://')[0]
         try:
             async with session.get(domain, timeout=5) as response:
-                if response.status == 200:
-                    results.append(f"{protocol.upper()} reachable.")
-                else:
-                    results.append(f"{protocol.upper()} returned status code {response.status}.")
+                results.append({protocol.upper(), response.status})
         except Exception as e:
             results.append(f"{protocol.upper()} not reachable. Error: {e}")
     else:
         for protocol in ["http", "https"]:
             try:
                 async with session.get(f'{protocol}://{domain}', timeout=5) as response:
-                    if response.status == 200:
-                        results.append(f"{protocol.upper()} reachable.")
-                    else:
-                        results.append(f"{protocol.upper()} returned status code {response.status}.")
+                    results.append({protocol.upper(), response.status})
             except Exception as e:
                 results.append(f"{protocol.upper()} not reachable. Error: {e}")
-    return {'domain': domain, 'result': response.status if 'response' in locals() else None}
+    return {'domain': domain, 'result': results}
 
 async def main():
     async with aiohttp.ClientSession() as session:
